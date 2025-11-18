@@ -1,0 +1,96 @@
+{
+    "name": "hbm_test", 
+    "description": [
+        "My first custom HLS kernel that Reads and Writes to HBM."
+    ],
+    "flow": "vitis",
+    "keywords": [
+        "xrt::device",
+        "load_xclbin", 
+        "xrt::bo",
+        "xrt::kernel", 
+        "map", 
+        "sync",
+        "XCL_BO_SYNC_BO_TO_DEVICE",
+        "XCL_BO_SYNC_BO_FROM_DEVICE",
+        "gmem",
+        "#pragma HLS INTERFACE",
+        "dataflow",
+        "hls::stream"
+    ], 
+    "key_concepts": [
+        "XRT Native API",
+        "Task Level Parallelism"
+    ],
+    "platform_blocklist": [
+        "nodma"
+    ], 
+    "os": [
+        "Linux"
+    ], 
+    "runtime": [
+        "OpenCL"
+    ], 
+    "host": {
+        "host_exe": "hbm_test",
+        "compiler": {
+            "sources": [
+                "REPO_DIR/common/includes/cmdparser/cmdlineparser.cpp",
+                "REPO_DIR/common/includes/logger/logger.cpp",
+                "./src/host.cpp"
+            ], 
+            "includepaths": [
+                "REPO_DIR/common/includes/cmdparser",
+                "REPO_DIR/common/includes/logger"
+            ]
+        },
+        "linker" : {
+            "libraries" : ["uuid",
+                           "xrt_coreutil"
+               ]
+        }
+    },
+    "containers": [
+        {
+            "accelerators": [
+                {
+                    "name": "RW", 
+                    "location": "src/RW.cpp"
+                }
+            ], 
+            "name": "RW"
+        }
+    ],
+    "launch": [
+        {
+            "cmd_args": "-x BUILD/RW.xclbin", 
+            "name": "generic launch for all flows"
+        }
+    ], 
+    "contributors": [
+        {
+            "url": "http://www.xilinx.com", 
+            "group": "Xilinx"
+        }
+    ],
+    "testinfo": {
+        "disable": false,
+        "profile": "no",
+        "jobs": [
+            {
+                "index": 0,
+                "dependency": [],
+                "env": "",
+                "cmd": "",
+                "max_memory_MB": 32768,
+                "max_time_min": 300
+            }
+        ],
+        "targets": [
+            "vitis_sw_emu",
+            "vitis_hw_emu",
+            "vitis_hw"
+        ],
+        "category": "canary"
+    }
+}
