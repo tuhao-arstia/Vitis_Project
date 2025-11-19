@@ -11,7 +11,7 @@
 // 1024 bits = 128 bytes
 constexpr size_t DATA_WIDTH_BITS = 1024;
 constexpr size_t DATA_WIDTH_BYTES = DATA_WIDTH_BITS / 8; // 128 bytes
-constexpr size_t NUM_ELEMENTS = 1;
+constexpr size_t NUM_ELEMENTS = 100; // upper bound: 2097152
 constexpr size_t BUFFER_SIZE_BYTES = NUM_ELEMENTS * DATA_WIDTH_BYTES;
 
 // 輔助函數：解析 1024-bit 緩衝區，印出每個元素末 16-bit 的十進位值
@@ -51,6 +51,8 @@ int verify_and_print(
     const std::vector<unsigned char>& final_result_buffer,
     size_t elements_to_check) {
 
+    const int label_width = 4;  // " a: ", " b: ", " c: " 的寬度
+    const int value_width = 5;  // 假設數字 0-255 最多 3 位數，我們給 5 位寬度
     std::cout << "\n==================== VERIFICATION ====================" << std::endl;
     int error_count = 0;
     
@@ -59,13 +61,17 @@ int verify_and_print(
     num_to_check = std::min(num_to_check, final_result_buffer.size() / DATA_WIDTH_BYTES);
 
     for (size_t i = 0; i < num_to_check; ++i) {
-        std::cout << "PATTERN [" << i << "]:" << std::endl;
+        std::cout << "PATTERN [" << i+1 << "]:" << std::endl;
         
         // --- 印出輸入 ---
         // static_cast<int> 是為了確保 cout 將 uint8_t 當作數字而不是字元來印
-        std::cout << "  a: " << static_cast<int>(host_a[i]) 
-                  << "\tb: " << static_cast<int>(host_b[i]) 
-                  << "\tc: " << static_cast<int>(host_c[i]) << std::endl;
+        std::cout << std::left << std::setw(label_width) << " a: " 
+          << std::left << std::setw(value_width) << static_cast<int>(host_a[i])
+          << std::left << std::setw(label_width) << " b: " 
+          << std::left << std::setw(value_width) << static_cast<int>(host_b[i])
+          << std::left << std::setw(label_width) << " c: " 
+          << std::left << std::setw(value_width) << static_cast<int>(host_c[i]) 
+          << std::endl;
 
         // --- 印出黃金輸出 ---
         std::cout << "  golden_output: " << golden_out[i] << std::endl;
@@ -105,7 +111,7 @@ int main(int argc, char** argv) {
     auto kernel_wb = xrt::kernel(device, uuid, "WB");
 
     // 2. Prepare input data on host
-    std::cout << "Generating random host-side input data..." << std::endl;
+    std::cout << "Generating random input data..." << std::endl;
     std::cout << "Number of patterns: " << NUM_ELEMENTS << std::endl;
     std::vector<uint8_t> host_a(NUM_ELEMENTS);
     std::vector<uint8_t> host_b(NUM_ELEMENTS);
@@ -184,7 +190,7 @@ int main(int argc, char** argv) {
     run_wb.start();
     
     // 只需要等待管線的最後一個核心 (WB) 完成即可
-    std::cout << "Waiting for WB kernel to complete writing back 10 elements..." << std::endl;
+    std::cout << "Waiting for WB kernel to complete writing back " << NUM_ELEMENTS << " elements..." << std::endl;
     run_wb.wait();
 
     // 6. 將 WB 的結果從 HBM 讀回主機

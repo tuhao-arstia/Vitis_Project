@@ -49,42 +49,40 @@ parameter BUSY   = 1'b1;
 // Decalarations
 
 // FSM
-reg c_state;
-reg n_state;
-reg ap_done_reg;
+reg     c_state;
+reg     n_state;
+reg     ap_done_reg;
+
 // create start pulse
-wire ap_start_pulse;
-reg ap_start_d;
+wire    ap_start_pulse;
+reg     ap_start_d;
 
 // Buffers
 reg  [7:0] a_buffer;
-reg        a_buffer_valid;
-
 reg  [7:0] b_buffer;
-reg        b_buffer_valid;
-
 reg [15:0] c_buffer;
-reg        c_buffer_valid;
 
 // MAC signals
 wire [15:0] mac_mult;
 reg  [15:0] mac_result;
 
 // last signal
-reg        last;
-reg        last_d1;
+wire       all_last;
+reg        all_last_d1;
+reg        all_last_d2;
 
 // all buffer valid
-wire all_buffer_valid;
-reg  all_buffer_valid_d1;
+wire    all_hs;
+reg     all_hs_d1;
+reg     all_hs_d2;
 
-wire hs_axis_a;
-wire hs_axis_b;
-wire hs_axis_c;
+wire    hs_axis_a;
+wire    hs_axis_b;
+wire    hs_axis_c;
 
 // back-pressure signals
-wire pipeline_stall;
-wire pipeline_ready;
+wire    pipeline_stall;
+wire    pipeline_ready;
 
 //--------------------------------------
 //               Design
@@ -99,7 +97,7 @@ always @(posedge ap_clk or negedge ap_rst_n) begin
 end
 
 always @(*) begin
-    n_state = IDLE;
+    n_state = c_state;
     case (c_state)
         IDLE: begin
             if (ap_start_pulse) begin
@@ -129,11 +127,12 @@ assign ap_idle  = (c_state == IDLE);
 assign ap_ready = (c_state == IDLE);
 
 assign ap_done  = ap_done_reg;
+
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
         ap_done_reg <= 1'b0;
     end else begin
-        if (c_state == BUSY && m_axis_out_tlast && m_axis_out_tready && m_axis_out_tvalid) begin
+        if (m_axis_out_tlast && m_axis_out_tready && m_axis_out_tvalid) begin
             ap_done_reg <= 1'b1;
         end else begin
             ap_done_reg <= 1'b0;
@@ -146,26 +145,12 @@ assign pipeline_stall = m_axis_out_tvalid && ~m_axis_out_tready;
 assign pipeline_ready = ~pipeline_stall;
 
 // handshake
-assign all_buffer_valid = a_buffer_valid && b_buffer_valid && c_buffer_valid;
 assign hs_axis_a = s_axis_a_tvalid && s_axis_a_tready;
 assign hs_axis_b = s_axis_b_tvalid && s_axis_b_tready;
 assign hs_axis_c = s_axis_c_tvalid && s_axis_c_tready;
 
 // A
-assign s_axis_a_tready = (c_state == BUSY) && (!a_buffer_valid || (all_buffer_valid && pipeline_ready));
-
-always @(posedge ap_clk or negedge ap_rst_n) begin
-    if (!ap_rst_n) begin
-        a_buffer_valid <= 1'b0;
-    end else begin
-        if (hs_axis_a) begin
-            a_buffer_valid <= 1'b1;
-        end else if (all_buffer_valid && pipeline_ready) begin
-            // no new data but pipeline proceeds
-            a_buffer_valid <= 1'b0;
-        end
-    end
-end
+assign s_axis_a_tready = (c_state == BUSY) && (pipeline_ready);
 
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
@@ -178,20 +163,7 @@ always @(posedge ap_clk or negedge ap_rst_n) begin
 end
 
 // B
-assign s_axis_b_tready = (c_state == BUSY) && (!b_buffer_valid || (all_buffer_valid && pipeline_ready));
-
-always @(posedge ap_clk or negedge ap_rst_n) begin
-    if (!ap_rst_n) begin
-        b_buffer_valid <= 1'b0;
-    end else begin
-        if (hs_axis_b) begin
-            b_buffer_valid <= 1'b1;
-        end else if (all_buffer_valid && pipeline_ready) begin
-            // no new data but pipeline proceeds
-            b_buffer_valid <= 1'b0;
-        end
-    end
-end
+assign s_axis_b_tready = (c_state == BUSY) && (pipeline_ready);
 
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
@@ -204,20 +176,7 @@ always @(posedge ap_clk or negedge ap_rst_n) begin
 end
 
 // C
-assign s_axis_c_tready = (c_state == BUSY) && (!c_buffer_valid || (all_buffer_valid && pipeline_ready));
-
-always @(posedge ap_clk or negedge ap_rst_n) begin
-    if (!ap_rst_n) begin
-        c_buffer_valid <= 1'b0;
-    end else begin
-        if (hs_axis_c) begin
-            c_buffer_valid <= 1'b1;
-        end else if (all_buffer_valid && pipeline_ready) begin
-            // no new data but pipeline proceeds
-            c_buffer_valid <= 1'b0;
-        end
-    end
-end
+assign s_axis_c_tready = (c_state == BUSY) && (pipeline_ready);
 
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
@@ -235,51 +194,42 @@ assign mac_mult = a_buffer * b_buffer;
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
         mac_result <= 16'b0;
-    end else begin
-        if (all_buffer_valid && pipeline_ready) begin
-            mac_result <= mac_mult + c_buffer;
-        end
+    end else if (pipeline_ready) begin
+        mac_result <= mac_mult + c_buffer;
     end
 end
 
 // output
-// delayed all_buffer_valid
+// all handshake
+assign all_hs = hs_axis_a && hs_axis_b && hs_axis_c;
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
-        all_buffer_valid_d1 <= 1'b0;
-    end else if (all_buffer_valid && pipeline_ready) begin
-        all_buffer_valid_d1 <= all_buffer_valid;
-    end else begin
-        all_buffer_valid_d1 <= 1'b0;
+        all_hs_d1 <= 1'b0;
+    end else if (pipeline_ready) begin
+        all_hs_d1 <= all_hs;
+        all_hs_d2 <= all_hs_d1;
     end
 end
 
-// last signal reference : A
+// all last
+assign all_last = s_axis_a_tlast && s_axis_b_tlast && s_axis_c_tlast;
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
-        last <= 1'b0;
-    end else begin
-        if (hs_axis_a) begin
-            last <= s_axis_a_tlast;
-        end else if (all_buffer_valid && pipeline_ready) begin
-            // no new data but pipeline proceeds, clear last
-            last <= 1'b0;
-        end // else retain the value
+        all_last_d1 <= 1'b0;
+    end else if (all_hs) begin
+        all_last_d1 <= all_last;
     end
 end
-
 always @(posedge ap_clk or negedge ap_rst_n) begin
     if (!ap_rst_n) begin
-        last_d1 <= 1'b0;
-    end else if (all_buffer_valid && pipeline_ready) begin
-        last_d1 <= last;
-    end else begin
-        last_d1 <= 1'b0;
+        all_last_d2 <= 1'b0;
+    end else if (pipeline_ready) begin
+        all_last_d2 <= all_last_d1;
     end
 end
 
 assign m_axis_out_tdata = {1008'b0, mac_result};
-assign m_axis_out_tvalid = all_buffer_valid_d1;
-assign m_axis_out_tlast  = last_d1;
+assign m_axis_out_tvalid = all_hs_d2;
+assign m_axis_out_tlast  = all_last_d2;
 
 endmodule : mac_rtl
