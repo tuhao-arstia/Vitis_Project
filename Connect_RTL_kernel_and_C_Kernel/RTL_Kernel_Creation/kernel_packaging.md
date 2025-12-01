@@ -116,4 +116,4 @@ You can simply source `ip_package.tcl` in the Vivado Tcl Console.
 
 ## Congratulations !!!
 
-Now the generated Vitis kernel file (`mac.xo`) appears in `mac_ip/xo` !!!
+Now the generated Vitis kernel file (`mac.xo`) is in `mac_ip/xo` !!!
