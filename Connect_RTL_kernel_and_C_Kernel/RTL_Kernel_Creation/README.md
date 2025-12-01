@@ -2,13 +2,12 @@
 
 ## Source files
 
-| File                  | Role                    | Notes                          |
-|-----------------------|-------------------------|--------------------------------|
-| `mac.v`               | Top module              | Instantiates user RTL & ctrl   |
-| `mac_control_s_axi.v` | Control interface       | AXI4-Lite for `ap_ctrl` signals|
-| `mac_rtl.v`           | User RTL logic          | MAC ( FSM control: `ap_ctrl` )     |
-|
-| `ip_package.tcl`      | Tool script             | Vivado IP packaging flow       |
+| File                      | Role                    | Notes                          |
+|---------------------------|-------------------------|--------------------------------|
+| `src/mac.v`               | Top module              | Instantiates user RTL & ctrl   |
+| `src/mac_control_s_axi.v` | Control interface       | AXI4-Lite for `ap_ctrl` signals|
+| `src/mac_rtl.v`           | User RTL logic          | MAC ( FSM control: `ap_ctrl` ) |
+| `ip_package.tcl`          | Tool script             | Vivado IP packaging flow       |
 
 
 ## Tutorial
@@ -25,7 +24,7 @@ Ensure the Xilinx and GCC environments are sourced.
 scl enable devtoolset-7 bash
 ```
 
-### 2. **Implementing RTL & Interfaces **
+### 2. **Implementing RTL & Interfaces**
    
 Finish the user RTL logic, ensuring all the I/O ports follow the AXI protocol.
    
