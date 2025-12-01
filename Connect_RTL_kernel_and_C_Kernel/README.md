@@ -10,6 +10,8 @@ Board: `xilinx_u280_gen3x16_xdma_1_202211_1`
 
 ***Please modify it according to your own environment.***
 
+---
+
 ## Project Objective
 
 
@@ -17,7 +19,7 @@ This project focuses on how to connect RTL kernels and C kernels via AXI-Stream 
 
 **Step 1 : [RTL_Kernel_Creation](https://github.com/tuhao-arstia/Vitis_Project/tree/main/Connect_RTL_kernel_and_C_Kernel/RTL_Kernel_Creation)**
   
-Tutorial for creating RTL kernel file(.xo) with user RTL logic through Vitis and Vivado.
+Tutorial for creating Vitis kernel file(`.xo`) with user RTL logic through Vitis and Vivado.
 
 **Step 2 : [Vitis](https://github.com/tuhao-arstia/Vitis_Project/tree/main/Connect_RTL_kernel_and_C_Kernel/Vitis)**
 

@@ -24,17 +24,11 @@ Ensure the Xilinx and GCC environments are sourced.
 scl enable devtoolset-7 bash
 ```
 
-### 2. **Implementing RTL & Interfaces**
-   
-Finish the user RTL logic, ensuring all the I/O ports follow the AXI protocol.
-   
-Add I/O ports for `ap_ctrl` signals and implement a simple FSM controlled by `ap_ctrl`.
+### 2. [**Generating RTL Template**](./template_generation.md)
 
-Refer to the following steps to better understand these modifications.
+> Make sure to confirm the AXI protocols used by all I/O ports in the RTL design before step 2.
 
-### 3. [**Generating RTL Template**](./template_generation.md)
-
-### 4. [**Packaging RTL Kernel**](./kernel_packaging.md)
+### 3. [**Packaging RTL Kernel**](./kernel_packaging.md)
 
 
 
