@@ -68,6 +68,9 @@ All these steps mentioned later are equivalent to the command in `ip_package.tcl
 You can simply source `ip_package.tcl` in the Vivado Tcl Console.
 
 - **Identification** : No modifications. You can ignore this part.
+
+    - **Name** Option is your kernel file name, you should call the kernel using this name.
+
     ```
     [Tcl Console]
     set_property vendor fpga_demo [ipx::current_core]
