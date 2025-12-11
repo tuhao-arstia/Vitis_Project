@@ -102,6 +102,8 @@ xclbin: build
 
 ############################## Setting Rules for Binary Containers (Building Kernels) ##############################
 # change : HLS kernel compilation rules
+# option :
+# --hls.clock 100000000:<kernel_name>  --> set clock frequency to 100MHz for HLS kernel
 $(TEMP_DIR)/mm2s_bridge.xo: src/mm2s_bridge.cpp
 	mkdir -p $(TEMP_DIR)
 	v++ -c $(VPP_FLAGS) -t $(TARGET) --platform $(PLATFORM) -k mm2s_bridge --temp_dir $(TEMP_DIR)  -I'$(<D)' -o'$@' '$<'
@@ -109,7 +111,6 @@ $(TEMP_DIR)/mm2s_bridge.xo: src/mm2s_bridge.cpp
 $(TEMP_DIR)/hbm_controller.xo: src/hbm_controller.cpp
 	mkdir -p $(TEMP_DIR)
 	v++ -c $(VPP_FLAGS) -t $(TARGET) --platform $(PLATFORM) -k hbm_controller --temp_dir $(TEMP_DIR)  -I'$(<D)' -o'$@' '$<'
-
 # change(1) : add cfg file $(VPP_LDFLAGS_RW)
 # change(2) : add RTL kernel xo file during linking $()
 # template:
@@ -117,6 +118,8 @@ $(TEMP_DIR)/hbm_controller.xo: src/hbm_controller.cpp
 # 	mkdir -p $(BUILD_DIR)
 # 	v++ -l $(VPP_FLAGS) $(VPP_LDFLAGS) -t $(TARGET) --platform $(PLATFORM) --temp_dir $(TEMP_DIR) -o'$(LINK_OUTPUT)' $(+)
 # 	v++ -p $(LINK_OUTPUT) $(VPP_FLAGS) -t $(TARGET) --platform $(PLATFORM) --package.out_dir $(PACKAGE_OUT) -o $(BUILD_DIR)/<xclbin_name>.xclbin
+# option:
+# v++ -l --clock.defaultFreqHz 100000000
 $(BUILD_DIR)/test.xclbin: $(TEMP_DIR)/mm2s_bridge.xo  $(TEMP_DIR)/hbm_controller.xo $(RTL_KRNL_XO)
 	mkdir -p $(BUILD_DIR)
 	v++ -l $(VPP_FLAGS) $(VPP_LDFLAGS) -t $(TARGET) --platform $(PLATFORM) --temp_dir $(TEMP_DIR) $(VPP_LDFLAGS_RW) -o'$(LINK_OUTPUT)' $(TEMP_DIR)/mm2s_bridge.xo $(TEMP_DIR)/hbm_controller.xo $(RTL_KRNL_XO)

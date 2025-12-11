@@ -19,8 +19,7 @@
 #define DATA_WIDTH 1024
 
 // Read Credit Limit:
-// recommended upper bound: 256
-#define MAX_READ_CREDITS 256
+#define MAX_READ_CREDITS 32
 
 // ==========================================================
 // Type Definitions
@@ -201,9 +200,9 @@ void hbm_controller(
     
     // HBM AXI-Master Interface
     #pragma HLS INTERFACE m_axi port=hbm_port_wr offset=slave bundle=gmem_wr \
-        max_write_burst_length=32 
+        max_write_burst_length=16 num_write_outstanding=4
     #pragma HLS INTERFACE m_axi port=hbm_port_rd offset=slave bundle=gmem_rd \
-        max_read_burst_length=32 
+        max_read_burst_length=16 num_read_outstanding=4
     
     // Control Interface (AXI-Lite)
     #pragma HLS INTERFACE s_axilite port=total_cmds bundle=control
@@ -222,11 +221,11 @@ void hbm_controller(
     static hls::stream<token_t> read_credit_fifo;
     static hls::stream<token_t> write_done_fifo;
 
-    #pragma HLS STREAM variable=w_fifo depth=64
-    #pragma HLS STREAM variable=write_done_fifo depth=64
+    #pragma HLS STREAM variable=w_fifo depth=16
+    #pragma HLS STREAM variable=write_done_fifo depth=16
 
-    #pragma HLS STREAM variable=r_fifo depth=256
-    #pragma HLS STREAM variable=read_credit_fifo depth=256
+    #pragma HLS STREAM variable=r_fifo depth=32
+    #pragma HLS STREAM variable=read_credit_fifo depth=32
 
     // ======================================================
     // Launch Parallel Processes

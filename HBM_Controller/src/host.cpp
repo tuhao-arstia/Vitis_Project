@@ -23,7 +23,8 @@
 // =========================================================
 constexpr size_t HBM_CHANNEL_SIZE = 1UL * 1024 * 1024 * 1024;
 constexpr size_t DATA_WIDTH_BYTES = 128; // 1024 bits
-constexpr uint32_t MAX_ADDR_INDEX = (HBM_CHANNEL_SIZE / DATA_WIDTH_BYTES);
+// constexpr uint32_t MAX_ADDR_INDEX = (HBM_CHANNEL_SIZE / DATA_WIDTH_BYTES) ; // 8388608 = 2^23
+constexpr uint32_t MAX_ADDR_INDEX = 4194304; // 2^22 = hardware address limit
 
 // =========================================================
 // Data Structures
@@ -125,9 +126,9 @@ void verify_results(const std::vector<Transaction>& golden_txs, const uint8_t* m
 
         bool match = (std::memcmp(res_ptr, golden_ptr, DATA_WIDTH_BYTES) == 0);
 
-        // 格式化左側 "Pattern[i]"
+        // 格式化左側 "Pat[i]"
         std::stringstream ss_item;
-        ss_item << "Pattern[" << i << "]";
+        ss_item << "Pat[" << i << "]";
         
         // 格式化 Address，保留7位數寬度
         std::stringstream ss_addr;
@@ -181,27 +182,30 @@ int main(int argc, char** argv) {
     // 1. Select Generator
     // =========================================================
     std::unique_ptr<PatternGenerator> gen;
-    int request_num_tx = 0; // User-defined number of transactions
+    int request_num_tx = 0; 
 
-    // Modify pattern settings here.
+    // ===================================================================================================================
+    //                                          PATTERN USER SETTINGS
+    // ===================================================================================================================
     if (mode == 0) {
         std::cout << "=============================" << std::endl;
         std::cout << "-- Mode: Sequential Access --" << std::endl;
         std::cout << "=============================" << std::endl;
-        gen = std::make_unique<SequentialGenerator>(123, 1); // Start=123, Stride=1
-        request_num_tx = 555;
+        gen = std::make_unique<SequentialGenerator>(0, 1); // User-defined: (Starting_Address, Stride)
+        request_num_tx = 500000; // User-defined: number of transactions
     } else {
         std::cout << "===========================" << std::endl;
         std::cout << "--  Mode: Random Access  --" << std::endl;
         std::cout << "===========================" << std::endl;
-        uint32_t user_max = 1000000; // User-defined max address index
+        uint32_t user_max = 4194303; // User-defined max address index
         if (user_max >= MAX_ADDR_INDEX) {
             std::cerr << "[Warning] User max addr exceeds HBM limit. Clamping to " << (MAX_ADDR_INDEX - 1) << std::endl;
             user_max = MAX_ADDR_INDEX - 1;
         }
         gen = std::make_unique<RandomGenerator>(0, user_max);
-        request_num_tx = 720;  
+        request_num_tx = 500000;  
     }
+    // ===================================================================================================================
 
     // Generate Transactions
     auto transactions = gen->generate(request_num_tx);
